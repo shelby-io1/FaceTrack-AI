@@ -44,24 +44,25 @@ attendance-ai/
 ├── backend/
 │   └── app/
 │       ├── core/           — Config, DB session, JWT/bcrypt helpers
-│       ├── models/         — SQLAlchemy ORM (User, Student, Enrollment, Attendance)
-│       ├── routes/         — auth, neon_auth, students, enrollment, recognition, attendance, health
+│       ├── models/         — SQLAlchemy ORM (User, Student, FaceEncoding, Attendance)
+│       ├── routes/         — auth, neon_auth, students, teachers, enrollment, recognition, attendance, health
 │       ├── schemas/        — Pydantic request/response models
-│       ├── services/       — Business logic (auth, face recognition)
+│       ├── services/       — Business logic (auth, face recognition, enrollment)
 │       └── ai/             — InsightFace wrapper (detect, embed, compare)
 ├── frontend/
 │   └── src/
 │       ├── app/
 │       │   ├── (auth)/         — Login & Register pages
 │       │   ├── attendance/     — Webcam + auto-recognize + mark attendance
-│       │   ├── enrollment/     — Face capture (20 shots, 5 poses)
-│       │   ├── students/       — CRUD list, new, edit
+│       │   ├── enrollment/     — Face capture (20 shots, 5 poses) + student list with image gallery
+│       │   ├── students/       — List all students
+│       │   ├── teachers/       — List teachers with inline editing
 │       │   └── api/auth/       — Neon Auth proxy, token exchange
 │       ├── lib/
 │       │   ├── auth/           — Neon Auth server/client SDK instances
 │       │   ├── auth-context.tsx — Auth provider (TanStack Query)
 │       │   └── api.ts          — Axios client with Bearer interceptor
-│       ├── components/         — Shared UI components
+│       ├── components/         — Shared UI components (Sidebar, ProtectedRoute, AppLayout)
 │       └── proxy.ts            — Next.js 16 route guard
 └── docs/                      — (project documentation, TBD)
 ```
@@ -95,7 +96,6 @@ uvicorn app.main:app --reload --port 8000
 ```bash
 cd frontend
 npm install
-# or: bun install
 
 # Configure frontend/.env.local
 # NEXT_PUBLIC_API_URL=http://localhost:8000/api
@@ -104,7 +104,6 @@ npm install
 # NEON_AUTH_SHARED_SECRET= (same as backend)
 
 npm run dev
-# or: bun dev
 ```
 
 ### Dev URLs
@@ -144,6 +143,7 @@ npm run dev
 | POST   | `/api/auth/register`       | Register (local users table)   |
 | POST   | `/api/auth/login`          | Login (local users table)      |
 | POST   | `/api/auth/refresh`        | Refresh JWT                    |
+| PATCH  | `/api/auth/me`             | Update profile                 |
 | GET    | `/api/auth/me`             | Current user profile           |
 | POST   | `/api/auth/neon-exchange`  | Neon Auth → local JWT exchange |
 
@@ -157,11 +157,20 @@ npm run dev
 | PUT    | `/api/students/{id}`      | Update student             |
 | DELETE | `/api/students/{id}`      | Delete student             |
 
+### Teachers
+
+| Method | Path                      | Description                |
+| ------ | ------------------------- | -------------------------- |
+| GET    | `/api/teachers`           | List all teachers          |
+| PUT    | `/api/teachers/{user_id}` | Update teacher             |
+
 ### Enrollment
 
-| Method | Path                         | Description                           |
-| ------ | ---------------------------- | ------------------------------------- |
-| POST   | `/api/enrollment/capture`    | Detect face, store embedding + image  |
+| Method | Path                              | Description                           |
+| ------ | --------------------------------- | ------------------------------------- |
+| POST   | `/api/enrollment/capture`         | Detect face, store embedding + image  |
+| GET    | `/api/enrollment/status`          | All students with capture progress    |
+| GET    | `/api/enrollment/student/{id}/images` | Base64 images for a student        |
 
 ### Recognition
 
@@ -192,17 +201,29 @@ npm run dev
 
 ### Enrollment Flow
 
-- User sits in front of webcam
+- Admin selects a student from the dropdown and starts the camera
 - System captures 20 images across 5 poses (front, left, right, up, down — 4 each)
 - Each capture detects + embeds the face; low-quality images are rejected
-- All embeddings are stored in the `enrollments` table linked to the student
+- All embeddings are stored in the `face_encodings` table linked to the student
+- The enrolled students sidebar shows progress and allows viewing captured images
 
 ### Attendance Flow
 
 - Webcam streams live feed
-- On button press or auto-detect, face is captured and compared against enrolled students
+- On button press or auto-detect (3s interval), face is captured and compared against enrolled students
 - Best match above threshold → attendance recorded with student ID and timestamp
 - Each student can mark attendance once per day
+
+## Roles
+
+| Role      | Capabilities                                                    |
+| --------- | --------------------------------------------------------------- |
+| Admin     | Full access: manage students, teachers, enrollment, attendance  |
+| Teacher   | View students, mark attendance, manage enrollment               |
+| Student   | View own attendance and profile (self-registration via signup)  |
+
+- Registration is open to anyone (no invite code required)
+- Student profile is auto-created on signup with nullable fields (roll_number, department, semester)
 
 ## Design
 
