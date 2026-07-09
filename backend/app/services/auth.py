@@ -10,24 +10,41 @@ from app.core.security import (
     hash_password,
     verify_password,
 )
+from app.models.student import Student
 from app.models.user import User, UserRole
 
 security_scheme = HTTPBearer()
 
 
-def register_user(db: Session, email: str, password: str, name: str, role: str) -> User:
-    existing = db.query(User).filter(User.email == email).first()
-    if existing:
-        existing.name = name
-        existing.role = UserRole(role.lower())
-        db.commit()
-        db.refresh(existing)
-        return existing
+def _ensure_student_profile(db: Session, user_id: int) -> Student:
+    student = db.query(Student).filter(Student.user_id == user_id).first()
+    if not student:
+        student = Student(user_id=user_id)
+        db.add(student)
+        db.flush()
+    return student
 
+
+def register_user(
+    db: Session, email: str, password: str, name: str, role: str,
+) -> User:
     try:
         user_role = UserRole(role.lower())
     except ValueError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Invalid role: {role}")
+
+    existing = db.query(User).filter(User.email == email).first()
+
+    if existing:
+        existing.name = name
+        existing.role = user_role
+
+        if user_role == UserRole.STUDENT:
+            _ensure_student_profile(db, existing.id)
+
+        db.commit()
+        db.refresh(existing)
+        return existing
 
     user = User(
         email=email,
@@ -36,6 +53,11 @@ def register_user(db: Session, email: str, password: str, name: str, role: str) 
         role=user_role,
     )
     db.add(user)
+    db.flush()
+
+    if user_role == UserRole.STUDENT:
+        _ensure_student_profile(db, user.id)
+
     db.commit()
     db.refresh(user)
     return user

@@ -21,7 +21,7 @@ export default function EditStudentPage() {
     name: "",
     roll_number: "",
     department: "",
-    class_name: "",
+    semester: "",
     phone: "",
   });
 
@@ -37,7 +37,7 @@ export default function EditStudentPage() {
         name: student.name,
         roll_number: student.roll_number,
         department: student.department,
-        class_name: student.class_name,
+        semester: student.semester,
         phone: student.phone || "",
       });
     }
@@ -72,7 +72,7 @@ export default function EditStudentPage() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {(["name", "roll_number", "class_name", "phone"] as const).map((field) => (
+            {(["name", "roll_number", "semester", "phone"] as const).map((field) => (
               <div key={field}>
                 <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">
                   {field.replace("_", " ")}

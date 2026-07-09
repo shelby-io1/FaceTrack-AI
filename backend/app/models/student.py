@@ -16,9 +16,9 @@ class Student(Base):
     user_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("users.id"), unique=True, nullable=False
     )
-    roll_number: Mapped[str] = mapped_column(String(50), unique=True, index=True, nullable=False)
-    department: Mapped[str] = mapped_column(String(255), nullable=False)
-    class_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    roll_number: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    department: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    semester: Mapped[str | None] = mapped_column(String(255), nullable=True)
     phone: Mapped[str] = mapped_column(String(20), nullable=True)
     photo: Mapped[str] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())

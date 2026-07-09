@@ -3,7 +3,7 @@ export interface Student {
   user_id: number;
   roll_number: string;
   department: string;
-  class_name: string;
+  semester: string;
   phone: string | null;
   photo: string | null;
   email: string;

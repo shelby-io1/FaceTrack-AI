@@ -2,7 +2,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
-from app.routes import attendance, auth, enrollment, health, neon_auth, recognition, students
+from app.routes import (
+    attendance,
+    auth,
+    enrollment,
+    health,
+    invites,
+    neon_auth,
+    recognition,
+    students,
+    teachers,
+)
 
 app = FastAPI(title=settings.PROJECT_NAME, version="1.0.0")
 
@@ -20,4 +30,6 @@ app.include_router(students.router, prefix="/api", tags=["students"])
 app.include_router(enrollment.router, prefix="/api", tags=["enrollment"])
 app.include_router(recognition.router, prefix="/api", tags=["recognition"])
 app.include_router(attendance.router, prefix="/api", tags=["attendance"])
+app.include_router(invites.router, prefix="/api", tags=["invites"])
+app.include_router(teachers.router, prefix="/api", tags=["teachers"])
 app.include_router(neon_auth.router, prefix="/api", tags=["neon-auth"])

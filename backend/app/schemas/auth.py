@@ -36,6 +36,9 @@ class UserResponse(BaseModel):
     cnic: str | None = None
     is_active: bool
     created_at: datetime
+    roll_number: str | None = None
+    department: str | None = None
+    semester: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -46,6 +49,9 @@ class ProfileUpdate(BaseModel):
     age: int | None = None
     address: str | None = None
     cnic: str | None = None
+    roll_number: str | None = None
+    department: str | None = None
+    semester: str | None = None
 
 
 class ChangePasswordRequest(BaseModel):

@@ -30,16 +30,8 @@ export default function StudentsPage() {
     <ProtectedRoute allowedRoles={["admin", "teacher"]}>
       <AppLayout>
         <div className="p-6 max-w-5xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
+          <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Students</h1>
-            {isAdmin && (
-              <Link
-                href="/students/new"
-                className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800"
-              >
-                Add Student
-              </Link>
-            )}
           </div>
 
           <input
@@ -63,7 +55,7 @@ export default function StudentsPage() {
                     <th className="px-4 py-3 font-medium">Name</th>
                     <th className="px-4 py-3 font-medium">Email</th>
                     <th className="px-4 py-3 font-medium">Department</th>
-                    <th className="px-4 py-3 font-medium">Class</th>
+                     <th className="px-4 py-3 font-medium">Semester</th>
                     <th className="px-4 py-3 font-medium">Phone</th>
                     {isAdmin && <th className="px-4 py-3 font-medium text-right">Actions</th>}
                   </tr>
@@ -75,7 +67,7 @@ export default function StudentsPage() {
                       <td className="px-4 py-3 text-gray-700">{s.name}</td>
                       <td className="px-4 py-3 text-gray-500">{s.email}</td>
                       <td className="px-4 py-3 text-gray-700">{s.department}</td>
-                      <td className="px-4 py-3 text-gray-700">{s.class_name}</td>
+                       <td className="px-4 py-3 text-gray-700">{s.semester}</td>
                       <td className="px-4 py-3 text-gray-500">{s.phone || "—"}</td>
                       {isAdmin && (
                         <td className="px-4 py-3 text-right">

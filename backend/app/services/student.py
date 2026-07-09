@@ -10,7 +10,8 @@ from app.services.auth import hash_password
 def create_student(db: Session, data: dict) -> Student:
     if db.query(User).filter(User.email == data["email"]).first():
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already exists")
-    if db.query(Student).filter(Student.roll_number == data["roll_number"]).first():
+    roll = data.get("roll_number")
+    if roll and db.query(Student).filter(Student.roll_number == roll).first():
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail="Roll number already exists"
         )
@@ -26,9 +27,9 @@ def create_student(db: Session, data: dict) -> Student:
 
     student = Student(
         user_id=user.id,
-        roll_number=data["roll_number"],
-        department=data["department"],
-        class_name=data["class_name"],
+        roll_number=data.get("roll_number"),
+        department=data.get("department"),
+        semester=data.get("semester"),
         phone=data.get("phone"),
     )
     db.add(student)
@@ -44,7 +45,7 @@ def get_students(db: Session, search: str | None = None) -> list[Student]:
             or_(
                 Student.roll_number.ilike(f"%{search}%"),
                 Student.department.ilike(f"%{search}%"),
-                Student.class_name.ilike(f"%{search}%"),
+                Student.semester.ilike(f"%{search}%"),
                 User.name.ilike(f"%{search}%"),
                 User.email.ilike(f"%{search}%"),
             )

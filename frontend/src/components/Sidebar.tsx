@@ -13,8 +13,9 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: "Home", href: "/", roles: ["admin", "teacher", "student"] },
   { label: "Profile", href: "/profile", roles: ["admin", "teacher", "student"] },
-  { label: "Students", href: "/students", roles: ["admin", "teacher"] },
-  { label: "Enrollment", href: "/enrollment", roles: ["admin", "teacher"] },
+  { label: "Students",      href: "/students",            roles: ["admin", "teacher"] },
+  { label: "Teachers",      href: "/teachers",            roles: ["admin"] },
+  { label: "Enrollment",    href: "/enrollment",          roles: ["admin", "teacher"] },
   { label: "Attendance", href: "/attendance", roles: ["admin", "teacher"] },
   { label: "My Attendance", href: "/attendance/my", roles: ["student"] },
   { label: "Settings", href: "/settings", roles: ["admin", "teacher", "student"] },

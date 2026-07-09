@@ -15,6 +15,9 @@ export interface User {
   cnic: string | null;
   is_active: boolean;
   created_at: string;
+  roll_number?: string | null;
+  department?: string | null;
+  semester?: string | null;
 }
 
 interface AuthContextType {
@@ -71,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify({ email, password }),
       });
       const neonData = await neonRes.json();
-      if (!neonRes.ok) throw new Error(neonData.error?.message || "Sign in failed");
+      if (!neonRes.ok) throw new Error(neonData?.message || neonData?.error?.message || "Sign in failed");
 
       const exRes = await fetch("/api/auth/exchange-token", { method: "POST" });
       if (!exRes.ok) throw new Error("Token exchange failed");
@@ -88,9 +91,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, name }),
       });
-      const neonData = await neonRes.json();
+      let neonData: Record<string, unknown> = {};
+      try {
+        neonData = await neonRes.json();
+      } catch {
+        // non-JSON response — treat as unknown error unless already signed up
+      }
+      const nd = neonData as Record<string, unknown>;
       if (!neonRes.ok) {
-        const msg = neonData.error?.message || "";
+        const msg = (typeof nd?.message === "string" ? nd.message : "") ||
+                    (typeof (nd?.error as Record<string, unknown>)?.message === "string" ? (nd.error as Record<string, unknown>).message as string : "") ||
+                    "";
         if (!msg.toLowerCase().includes("already")) {
           throw new Error(msg || "Registration failed");
         }

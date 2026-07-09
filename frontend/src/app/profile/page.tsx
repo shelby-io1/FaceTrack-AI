@@ -3,14 +3,18 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
-import { useAuth } from "@/lib/auth-context";
+import { useAuth, type User } from "@/lib/auth-context";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import AppLayout from "@/components/AppLayout";
+import DepartmentCombobox from "@/components/DepartmentCombobox";
+
+const STUDENT_FIELDS = ["roll_number", "department", "semester"] as const;
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
+  const [savedData, setSavedData] = useState<User | null>(null);
 
   const [form, setForm] = useState({
     name: user?.name ?? "",
@@ -18,12 +22,16 @@ export default function ProfilePage() {
     age: "",
     address: "",
     cnic: "",
+    roll_number: "",
+    department: "",
+    semester: "",
   });
 
   const updateMutation = useMutation({
     mutationFn: (data: Record<string, unknown>) => api.patch("/auth/me", data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["auth", "me"] });
+    onSuccess: (res) => {
+      setSavedData(res.data as User);
+      queryClient.setQueryData(["auth", "me"], res.data);
       setEditing(false);
     },
   });
@@ -56,10 +64,17 @@ export default function ProfilePage() {
             {!editing ? (
               <>
                 {([
-                  ["Phone", user?.phone],
-                  ["Age", user?.age?.toString()],
-                  ["Address", user?.address],
-                  ["CNIC", user?.cnic],
+                  ["Phone", savedData?.phone ?? user?.phone],
+                  ["Age", savedData?.age?.toString() ?? user?.age?.toString()],
+                  ["Address", savedData?.address ?? user?.address],
+                  ["CNIC", savedData?.cnic ?? user?.cnic],
+                  ...(user?.role === "student"
+                    ? ([
+                        ["Roll Number", savedData?.roll_number ?? user?.roll_number],
+                        ["Department", savedData?.department ?? user?.department],
+                        ["Semester", savedData?.semester ?? user?.semester],
+                      ] as const)
+                    : []),
                 ] as const).map(([label, value]) => (
                   <div key={label} className="flex justify-between text-sm">
                     <span className="text-gray-400">{label}</span>
@@ -74,6 +89,9 @@ export default function ProfilePage() {
                       age: user?.age?.toString() ?? "",
                       address: user?.address ?? "",
                       cnic: user?.cnic ?? "",
+                      roll_number: user?.roll_number ?? "",
+                      department: user?.department ?? "",
+                      semester: user?.semester ?? "",
                     });
                     setEditing(true);
                   }}
@@ -84,15 +102,24 @@ export default function ProfilePage() {
               </>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
-                {(["name", "phone", "age", "address", "cnic"] as const).map((field) => (
+                {([...(["name", "phone", "age", "address", "cnic"] as const), ...(user?.role === "student" ? STUDENT_FIELDS : [])] as const).map((field) => (
                   <div key={field}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">{field}</label>
-                    <input
-                      type={field === "age" ? "number" : "text"}
-                      value={form[field]}
-                      onChange={(e) => setForm({ ...form, [field]: e.target.value })}
-                      className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-900"
-                    />
+                    {field === "department" ? (
+                      <DepartmentCombobox
+                        value={form.department}
+                        onChange={(v) => setForm({ ...form, department: v })}
+                      />
+                    ) : (
+                      <>
+                        <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">{field}</label>
+                        <input
+                          type={field === "age" ? "number" : "text"}
+                          value={form[field]}
+                          onChange={(e) => setForm({ ...form, [field]: e.target.value })}
+                          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm outline-none focus:border-gray-900"
+                        />
+                      </>
+                    )}
                   </div>
                 ))}
                 <div className="flex gap-3 pt-2">

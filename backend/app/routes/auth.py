@@ -42,7 +42,13 @@ def refresh(body: RefreshRequest):
 
 
 @router.get("/me", response_model=UserResponse)
-def get_me(current_user: User = Depends(get_current_user)):
+def get_me(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    from app.models.student import Student
+    student = db.query(Student).filter(Student.user_id == current_user.id).first()
+    if student:
+        current_user.roll_number = student.roll_number
+        current_user.department = student.department
+        current_user.semester = student.semester
     return current_user
 
 
@@ -52,10 +58,31 @@ def update_profile(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    for field, value in body.model_dump(exclude_none=True).items():
-        setattr(current_user, field, value)
+    from app.models.student import Student
+
+    user_fields = {"name", "phone", "age", "address", "cnic"}
+    student_fields = {"roll_number", "department", "semester"}
+
+    user_data = body.model_dump(exclude_none=True)
+
+    for field, value in user_data.items():
+        if field in user_fields:
+            setattr(current_user, field, value)
+
+    student = db.query(Student).filter(Student.user_id == current_user.id).first()
+    if student:
+        for field, value in user_data.items():
+            if field in student_fields:
+                setattr(student, field, value)
+        db.flush()
+
     db.commit()
     db.refresh(current_user)
+
+    if student:
+        current_user.roll_number = student.roll_number
+        current_user.department = student.department
+        current_user.semester = student.semester
     return current_user
 
 

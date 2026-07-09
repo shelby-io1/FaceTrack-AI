@@ -7,9 +7,9 @@ class StudentCreate(BaseModel):
     email: EmailStr
     password: str
     name: str
-    roll_number: str
-    department: str
-    class_name: str
+    roll_number: str | None = None
+    department: str | None = None
+    semester: str | None = None
     phone: str | None = None
 
 
@@ -17,16 +17,16 @@ class StudentUpdate(BaseModel):
     name: str | None = None
     roll_number: str | None = None
     department: str | None = None
-    class_name: str | None = None
+    semester: str | None = None
     phone: str | None = None
 
 
 class StudentResponse(BaseModel):
     id: int
     user_id: int
-    roll_number: str
-    department: str
-    class_name: str
+    roll_number: str | None = None
+    department: str | None = None
+    semester: str | None = None
     phone: str | None = None
     photo: str | None = None
     email: str = ""
