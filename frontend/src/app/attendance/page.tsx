@@ -52,22 +52,31 @@ export default function AttendancePage() {
         setCameraError("Camera API not supported in this browser");
         return;
       }
+
+      if (location.protocol !== "https:" && location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
+        setCameraError("Camera access requires HTTPS. This page is not served over a secure connection.");
+        return;
+      }
+
+      const perm = await navigator.permissions.query({ name: "camera" as PermissionName }).catch(() => null);
+      if (perm?.state === "denied") {
+        setCameraError("Camera access was previously denied. Please allow camera access in your browser settings (click the lock/info icon in the address bar) and reload the page.");
+        return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" },
       });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
       streamRef.current = stream;
       setCameraOn(true);
     } catch (err) {
       const msg = err instanceof DOMException
         ? err.name === "NotAllowedError"
-          ? "Camera permission denied. Allow camera access and try again."
+          ? "Camera permission denied. Allow camera access in your browser settings (click the lock/info icon in the address bar) and reload the page."
           : err.name === "NotFoundError"
-            ? "No camera found on this device"
+            ? "No camera found on this device. Connect a camera and try again."
             : err.name === "NotReadableError"
-              ? "Camera is in use by another application"
+              ? "Camera is in use by another application. Close other apps using the camera and try again."
               : `Camera error: ${err.message}`
         : "Camera access denied or unavailable";
       setCameraError(msg);
@@ -87,6 +96,12 @@ export default function AttendancePage() {
     setAutoMode(false);
     setResult(null);
   }, []);
+
+  useEffect(() => {
+    if (cameraOn && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+  }, [cameraOn]);
 
   useEffect(() => {
     return () => {

@@ -9,7 +9,9 @@ from app.models.student import Student
 
 
 def capture_face(db: Session, student_id: int, image_b64: str, pose: str) -> dict:
-    student = db.query(Student).filter(Student.id == student_id).first()
+    student = db.query(Student).filter(
+        (Student.id == student_id) | (Student.user_id == student_id)
+    ).first()
     if not student:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Student not found")
 

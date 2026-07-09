@@ -13,10 +13,10 @@ class CaptureImage(BaseModel):
 
 class EnrollmentStatus(BaseModel):
     student_id: int
+    user_id: int
+    name: str = ""
+    email: str = ""
+    roll_number: str | None = None
     captured: int = 0
     required: int = 20
-    poses: list[str] = ["front", "left", "right", "up", "down"]
-
-    @property
-    def complete(self) -> bool:
-        return self.captured >= self.required
+    complete: bool = False

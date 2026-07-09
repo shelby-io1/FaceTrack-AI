@@ -6,26 +6,31 @@ export async function POST() {
     return Response.json({ error: "Not authenticated" }, { status: 401 });
   }
 
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/auth/neon-exchange`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.NEON_AUTH_SHARED_SECRET}`,
-      },
-      body: JSON.stringify({
-        email: session.user.email,
-        name: session.user.name,
-        sub: session.user.id,
-      }),
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/auth/neon-exchange`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.NEON_AUTH_SHARED_SECRET}`,
+        },
+        body: JSON.stringify({
+          email: session.user.email,
+          name: session.user.name,
+          sub: session.user.id,
+        }),
+        signal: AbortSignal.timeout(30000),
+      }
+    );
+
+    const data = await res.json();
+    if (!res.ok) {
+      return Response.json(data, { status: res.status });
     }
-  );
 
-  const data = await res.json();
-  if (!res.ok) {
-    return Response.json(data, { status: res.status });
+    return Response.json(data);
+  } catch {
+    return Response.json({ error: "Backend server is not responding. Please ensure the backend is running." }, { status: 502 });
   }
-
-  return Response.json(data);
 }
